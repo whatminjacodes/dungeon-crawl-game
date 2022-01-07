@@ -15,6 +15,7 @@ public class DungeonGenerator : MonoBehaviour
     // Graphics
     [SerializeField] private GameObject[] _groundTiles;
     [SerializeField] private GameObject[] _wallTiles;
+    [SerializeField] private GameObject _doorTile;
 
 
     // What is the area camera sees
@@ -24,10 +25,15 @@ public class DungeonGenerator : MonoBehaviour
     // Used for naming the parent prefab
     int _numberOfRoomsGenerated = 0;
 
+    // Where to build the room
     int startBuildingPosX = 0;
     int startBuildingPosY = 0;
 
+    int nextRoomStartBuildingPosX = 0;
+    int nextRoomStartBuildingPosY = 0;
+
     int _previousRoomDirection = -1;
+    int _nextRoomDirection = -1;
 
     public delegate void DungeonGeneratedDelegate();
     public static event DungeonGeneratedDelegate DungeonGeneratedEvent;
@@ -46,6 +52,9 @@ public class DungeonGenerator : MonoBehaviour
 
         // Generate multiple rooms
         for(int i = 1; i <= _numberOfRooms; i++) {
+
+            // TODO: Refactor so that we know next room before building the first room
+            // This is needed so that door can be placed on correct location
             GenerateRoom(startBuildingPosX, startBuildingPosY);
             CalculateNextRoomPosition();
         }
@@ -55,6 +64,7 @@ public class DungeonGenerator : MonoBehaviour
         }
     }
 
+    // Generate one room to startX and startY location
     public void GenerateRoom(int startX, int startY) {
         
         GameObject roomParent = new GameObject("RoomParent" + _numberOfRoomsGenerated);
@@ -79,6 +89,7 @@ public class DungeonGenerator : MonoBehaviour
         _numberOfRoomsGenerated++;
     }
 
+    // Calculate the position of the next room
     private void CalculateNextRoomPosition() {
         
         int nextDirection = RandomizeNextRoomDirection();
@@ -88,26 +99,27 @@ public class DungeonGenerator : MonoBehaviour
 
         Debug.Log("Next room direction: " + nextDirection + ", previous direction: " + _previousRoomDirection);
         if (nextDirection == (int)Direction.North) {
-            // Add + y
             startBuildingPosY += _heightOfRoom;
+
         } else if (nextDirection == (int)Direction.East) {
-            // Add + x
             startBuildingPosX += _widthOfRoom;
+
         } else if (nextDirection == (int)Direction.South) {
-            // Subtract - y
             startBuildingPosY -= _heightOfRoom;
+
         } else if (nextDirection == (int)Direction.West) {
-            // Subtract - x
             startBuildingPosX -= _widthOfRoom;
         }
 
         _previousRoomDirection = GetOppositeDirection(nextDirection);
     }
 
+    // Randomize the direction where the next room will be
     private int RandomizeNextRoomDirection() {
         return Random.Range(0, 4);   // Returns random between 0...3
     }
 
+    // Get the direction where we last were building a room
     private int GetOppositeDirection(int nextRoomDirection) {
         int previousDirection = -1;
 
@@ -122,5 +134,9 @@ public class DungeonGenerator : MonoBehaviour
         }
 
         return previousDirection;
+    }
+
+    private int GetDoorPosition(int lengthOfWall) {
+        return Random.Range(1, lengthOfWall);     // Get random location between 1 and length of wall -1
     }
 }
